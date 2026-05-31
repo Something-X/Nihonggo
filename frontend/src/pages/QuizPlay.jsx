@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuizStore } from '../stores';
 import api from '../services/api';
-import JapaneseKeyboard from '../components/JapaneseKeyboard';
+
 
 // Sound effects using Web Audio API
 const playSound = (type) => {
@@ -43,9 +43,7 @@ export default function QuizPlay() {
   const nav = useNavigate();
   const { session, questions, currentIndex, combo, maxCombo, score, addAnswer, nextQuestion, setBurnActive, reset } = useQuizStore();
   const [feedback, setFeedback] = useState(null); // { isCorrect, correctAnswer }
-  const [typingAnswer, setTypingAnswer] = useState('');
-  const [useTyping, setUseTyping] = useState(false);
-  const [showKeyboard, setShowKeyboard] = useState(true);
+
   const [timeLeft, setTimeLeft] = useState(session?.timer || 0);
   const [shaking, setShaking] = useState(false);
   const [burnErrors, setBurnErrors] = useState(0);
@@ -77,11 +75,9 @@ export default function QuizPlay() {
     if (question) handleAnswer(null, true);
   };
 
-  // Randomly decide typing vs multiple choice
+  // Reset feedback for new question
   useEffect(() => {
     if (question) {
-      setUseTyping(Math.random() > 0.6);
-      setTypingAnswer('');
       setFeedback(null);
       if (session?.timer) setTimeLeft(session.timer);
     }
@@ -262,57 +258,18 @@ export default function QuizPlay() {
       </AnimatePresence>
 
       {/* Answer Options */}
+      {/* Answer Options - Multiple Choice */}
       {!feedback && (
-        <>
-          {!useTyping ? (
-            <div className="grid grid-cols-2 gap-3">
-              {question.options.map((opt, i) => (
-                <motion.button key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  onClick={() => handleAnswer(opt)}
-                  className="p-4 rounded-xl glass-card text-left hover:border-primary-500 hover:bg-primary-500/5 transition-all active:scale-95 group">
-                  <span className="text-xs text-gray-400 font-semibold">{String.fromCharCode(65 + i)}</span>
-                  <p className="text-lg font-semibold font-jp mt-1 group-hover:text-primary-500 transition-colors">{opt}</p>
-                </motion.button>
-              ))}
-            </div>
-          ) : (
-            <div>
-              {/* Input mode toggle */}
-              <div className="flex items-center justify-end gap-2 mb-2">
-                <button
-                  onClick={() => setShowKeyboard(!showKeyboard)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    showKeyboard
-                      ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20'
-                      : 'bg-gray-100 dark:bg-dark-800 text-gray-500 border border-transparent'
-                  }`}
-                >
-                  {showKeyboard ? (
-                    <><span>⌨️</span> <span>Keyboard JP</span> <span className="opacity-50">ON</span></>
-                  ) : (
-                    <><span>🔤</span> <span>Keyboard JP</span> <span className="opacity-50">OFF</span></>
-                  )}
-                </button>
-              </div>
-
-              {showKeyboard ? (
-                <JapaneseKeyboard
-                  value={typingAnswer}
-                  onInput={(char) => setTypingAnswer((p) => p + char)}
-                  onDelete={() => setTypingAnswer((p) => p.slice(0, -1))}
-                  onSubmit={() => handleAnswer(typingAnswer)}
-                />
-              ) : (
-                <div className="flex gap-2">
-                  <input value={typingAnswer} onChange={(e) => setTypingAnswer(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAnswer(typingAnswer)}
-                    className="input-field text-lg font-jp" placeholder="Ketik jawaban..." autoFocus />
-                  <button onClick={() => handleAnswer(typingAnswer)} className="btn-primary px-6">➡️</button>
-                </div>
-              )}
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-2 gap-3">
+          {question.options.map((opt, i) => (
+            <motion.button key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+              onClick={() => handleAnswer(opt)}
+              className="p-4 rounded-xl glass-card text-left hover:border-primary-500 hover:bg-primary-500/5 transition-all active:scale-95 group">
+              <span className="text-xs text-gray-400 font-semibold">{String.fromCharCode(65 + i)}</span>
+              <p className="text-lg font-semibold font-jp mt-1 group-hover:text-primary-500 transition-colors">{opt}</p>
+            </motion.button>
+          ))}
+        </div>
       )}
 
       {/* Combo display */}
